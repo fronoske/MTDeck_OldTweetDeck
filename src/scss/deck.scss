@@ -91,4 +91,10 @@ body.mtdeck {
 
   /* カラム番号を表示しないようにする */
   .column-nav-link:after { display: none;}
+
+  /* ヘッダー画像をもう少し暗くする */
+  div.prf-header-inner-overlay {
+    background-image: linear-gradient(transparent, rgba(20, 23, 26, 0.9));
+  }
+
 }
