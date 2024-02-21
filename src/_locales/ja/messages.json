@@ -1,6 +1,6 @@
 {
   "extensionDescription": {
-    "message": "TweetDeckをスマホアプリのように使えるようにするアドオン"
+    "message": "TweetDeck + OTD をスマホアプリのように使えるようにするアドオン"
   },
   "configTitle": {
     "message": "設定メニュー"
@@ -34,5 +34,26 @@
   },
   "configOptionMobileFriendlyOnCol": {
     "message": "カラム内にスマホ向けのスタイルを適用"
+  },
+  "configOptionShowAbsoluteTime": {
+    "message": "絶対時刻を表示する"
+  },
+  "configOptionEnableSwipeNavMedia": {
+    "message": "横スワイプで画像を切り替える"
+  },
+  "configOptionEnableSwipeNavCol": {
+    "message": "横スワイプでカラムを移動する"
+  },
+  "configOptionShowExpander": {
+    "message": "長文ツイートの場合に「Expand tweet」を表示する"
+  },
+  "configOptionEnableSwipeDownToCloseMedia": {
+    "message": "下スワイプで画像を閉じる"
+  },
+  "configOptionEnableTapToShowFullImage": {
+    "message": "画像のタップでフルサイズ表示する"
+  },
+  "configOptionShowInitialInColumnTab": {
+    "message": "タブにリスト名とユーザー名の頭文字を表示する"
   }
 }

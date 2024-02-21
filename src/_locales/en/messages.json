@@ -1,6 +1,6 @@
 {
   "extensionDescription": {
-    "message": "A browser extension to customize TweetDeck for mobile"
+    "message": "A browser extension to customize TweetDeck with OTD for mobile"
   },
   "configTitle": {
     "message": "Preference"
@@ -34,5 +34,26 @@
   },
   "configOptionMobileFriendlyOnCol": {
     "message": "Enable mobile friendly styles on columns"
+  },
+  "configOptionShowAbsoluteTime": {
+    "message": "Show absolute time"
+  },
+  "configOptionEnableSwipeNavMedia": {
+    "message": "Enable horizontal swipe to prev/next media"
+  },
+  "configOptionEnableSwipeNavCol": {
+    "message": "Enable horizontal swipe to prev/next column"
+  },
+  "configOptionShowExpander": {
+    "message": "Show 'Expand tweet' button"
+  },
+  "configOptionEnableSwipeDownToCloseMedia": {
+    "message": "Enable swipe down to close media"
+  },
+  "configOptionEnableTapToShowFullImage": {
+    "message": "Enable tap to show full-sized image"
+  },
+  "configOptionShowInitialInColumnTab": {
+    "message": "Show initial of list (user) name in list (user) tab"
   }
 }
