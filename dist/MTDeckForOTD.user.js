@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name MTDeck for OTD
-// @version 2.1.0
+// @version 2.1.1
 // @author mkizka, kdroidwin, and fronoske
 // @description TweetDeckをスマホアプリのように使えるようにするUserScript (OTD対応版) mod by fronoske
 // @homepage https://github.com/fronoske/MTDeck_for_OTD
@@ -424,7 +424,7 @@
       }
   }
 
-  var version = "2.1.0";
+  var version = "2.1.1";
 
   class Config {
       constructor() {
@@ -682,17 +682,37 @@
           });
       }
       enableSwipeNavCol(mtd) {
+          // オリジナルにあるカラムボタンのハイライトの挙動を打ち消す
+          insertStyle(`a.column-nav-link:hover {
+      color: inherit;
+    }
+    a.is-selected.column-nav-link:hover {
+      color: white;
+    }`);
+          // カラムのボタンのタップでハイライト
+          const navButtons = document.querySelectorAll("a.column-nav-link");
+          navButtons.forEach((nav) => {
+              nav.addEventListener("click", (e) => {
+                  const navButtons = document.querySelectorAll("a.column-nav-link");
+                  navButtons.forEach((nav) => {
+                      if (nav === e.currentTarget) {
+                          nav.classList.add("is-selected");
+                      }
+                      else {
+                          nav.classList.remove("is-selected");
+                      }
+                  });
+              });
+          });
+          // スワイプでカラムボタンのタップをエミュレートする
           const touchManager = new TouchManager(this.$appContainer);
           touchManager.onSwipeX = (startX, direction) => {
-              // console.log(direction);
               mtd.update();
               const navButtons = document.querySelectorAll("a.column-nav-link");
-              navButtons.forEach((nav) => nav.classList.remove("is-selected"));
               let targetColIndex = direction == "left" ? mtd.columnIndex + 1 : mtd.columnIndex - 1;
               // console.log(`current=${mtd.columnIndex} target=${targetColumnIndex} result=${(navButtons.length + targetColumnIndex) % navButtons.length}`);
               targetColIndex = Math.min(navButtons.length - 1, Math.max(0, targetColIndex));
               navButtons[targetColIndex].click();
-              navButtons[targetColIndex].classList.add("is-selected");
           };
       }
   }
