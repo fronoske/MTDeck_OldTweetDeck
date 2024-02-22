@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name MTDeck for OTD
-// @version 2.1.1
+// @version 2.1.2
 // @author mkizka, kdroidwin, and fronoske
 // @description TweetDeckをスマホアプリのように使えるようにするUserScript (OTD対応版) mod by fronoske
 // @homepage https://github.com/fronoske/MTDeck_for_OTD
@@ -424,7 +424,7 @@
       }
   }
 
-  var version = "2.1.1";
+  var version = "2.1.2";
 
   class Config {
       constructor() {
@@ -718,20 +718,29 @@
   }
   class TweetExpander {
       addExpandTweetButton() {
+          const expanderPhrase = "(Expand tweet)";
           const $articles = document.querySelectorAll("article.js-stream-item");
           $articles.forEach(($article) => {
               var _a, _b, _c;
               const $tweetText = $article.querySelector(".js-tweet-text");
               const statusUrl = (_a = $article.querySelector("span.tweet-action[href]")) === null || _a === void 0 ? void 0 : _a.getAttribute("href");
               if ($tweetText !== null && statusUrl !== null) {
-                  // ツイート本文がリンクで終わらず、「…」で終わるが「……」では終わらない場合
+                  // Expand Tweet を出す条件
+                  // すでにExpand Tweet がなく、リンクを除くツイート本文が「…」で終わるが「……」では終わらない
+                  const containsExpandTweet = ((_b = $tweetText.lastElementChild) === null || _b === void 0 ? void 0 : _b.textContent) == expanderPhrase;
                   const $lastTextNode = Array.from($tweetText.childNodes)
                       .reverse()
                       .find((node) => node.nodeType == Node.TEXT_NODE);
-                  if (((_b = $lastTextNode === null || $lastTextNode === void 0 ? void 0 : $lastTextNode.textContent) === null || _b === void 0 ? void 0 : _b.endsWith("…")) && !((_c = $lastTextNode === null || $lastTextNode === void 0 ? void 0 : $lastTextNode.textContent) === null || _c === void 0 ? void 0 : _c.endsWith("……"))) {
+                  const lastText = (_c = $lastTextNode === null || $lastTextNode === void 0 ? void 0 : $lastTextNode.textContent) !== null && _c !== void 0 ? _c : "";
+                  if (!containsExpandTweet && lastText.endsWith("…") && !lastText.endsWith("……")) {
                       const id = $article.getAttribute("data-tweet-id");
                       // OTD が実装している expandTweet() を呼び出す
-                      $tweetText.innerHTML += `&nbsp;<a class="expand-tweet" href="${statusUrl}" onclick="expandTweet(event, '${id}')">Expand tweet</a>`;
+                      const $expandTweet = document.createElement("a");
+                      $expandTweet.setAttribute("class", "expand-tweet");
+                      $expandTweet.setAttribute("href", "expandTweet(event, '${id}')");
+                      $expandTweet.textContent = expanderPhrase;
+                      $tweetText.textContent += "\u{a0}";
+                      $tweetText.appendChild($expandTweet);
                   }
               }
           });
