@@ -56,36 +56,66 @@ export class AppContainerCustomizer {
   }
 
   private enableSwipeNavCol(mtd: Deck): void {
+    // オリジナルにあるカラムボタンのハイライトの挙動を打ち消す
+    insertStyle(
+      `a.column-nav-link:hover {
+      color: inherit;
+    }
+    a.is-selected.column-nav-link:hover {
+      color: white;
+    }`
+    );
+    // カラムのボタンのタップでハイライト
+    const navButtons = document.querySelectorAll<HTMLAnchorElement>("a.column-nav-link");
+    navButtons.forEach((nav) => {
+      nav.addEventListener("click", (e) => {
+        const navButtons = document.querySelectorAll<HTMLAnchorElement>("a.column-nav-link");
+        navButtons.forEach((nav) => {
+          if (nav === e.currentTarget) {
+            nav.classList.add("is-selected");
+          } else {
+            nav.classList.remove("is-selected");
+          }
+        });
+      });
+    });
+    // スワイプでカラムボタンのタップをエミュレートする
     const touchManager = new TouchManager(this.$appContainer);
     touchManager.onSwipeX = (startX, direction) => {
-      // console.log(direction);
       mtd.update();
       const navButtons = document.querySelectorAll<HTMLAnchorElement>("a.column-nav-link");
-      navButtons.forEach((nav) => nav.classList.remove("is-selected"));
       let targetColIndex = direction == "left" ? mtd.columnIndex + 1 : mtd.columnIndex - 1;
       // console.log(`current=${mtd.columnIndex} target=${targetColumnIndex} result=${(navButtons.length + targetColumnIndex) % navButtons.length}`);
       targetColIndex = Math.min(navButtons.length - 1, Math.max(0, targetColIndex));
       navButtons[targetColIndex].click();
-      navButtons[targetColIndex].classList.add("is-selected");
     };
   }
 }
 
 class TweetExpander {
   public addExpandTweetButton(): void {
+    const expanderPhrase = "(Expand tweet)";
     const $articles = document.querySelectorAll("article.js-stream-item");
     $articles.forEach(($article) => {
       const $tweetText = $article.querySelector(".js-tweet-text");
       const statusUrl = $article.querySelector("span.tweet-action[href]")?.getAttribute("href");
       if ($tweetText !== null && statusUrl !== null) {
-        // ツイート本文がリンクで終わらず、「…」で終わるが「……」では終わらない場合
+        // Expand Tweet を出す条件
+        // すでにExpand Tweet がなく、リンクを除くツイート本文が「…」で終わるが「……」では終わらない
+        const containsExpandTweet = $tweetText.lastElementChild?.textContent == expanderPhrase;
         const $lastTextNode = Array.from($tweetText.childNodes)
           .reverse()
           .find((node) => node.nodeType == Node.TEXT_NODE);
-        if ($lastTextNode?.textContent?.endsWith("…") && !$lastTextNode?.textContent?.endsWith("……")) {
+        const lastText = $lastTextNode?.textContent ?? "";
+        if (!containsExpandTweet && lastText.endsWith("…") && !lastText.endsWith("……")) {
           const id = $article.getAttribute("data-tweet-id");
           // OTD が実装している expandTweet() を呼び出す
-          $tweetText.innerHTML += `&nbsp;<a class="expand-tweet" href="${statusUrl}" onclick="expandTweet(event, '${id}')">Expand tweet</a>`;
+          const $expandTweet: HTMLAnchorElement = <HTMLAnchorElement>document.createElement("a");
+          $expandTweet.setAttribute("class", "expand-tweet");
+          $expandTweet.setAttribute("href", "expandTweet(event, '${id}')");
+          $expandTweet.textContent = expanderPhrase;
+          $tweetText.textContent += "\u{a0}";
+          $tweetText.appendChild($expandTweet);
         }
       }
     });
