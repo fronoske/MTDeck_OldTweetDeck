@@ -94,19 +94,28 @@ export class AppContainerCustomizer {
 
 class TweetExpander {
   public addExpandTweetButton(): void {
+    const expanderPhrase = "(Expand tweet)";
     const $articles = document.querySelectorAll("article.js-stream-item");
     $articles.forEach(($article) => {
       const $tweetText = $article.querySelector(".js-tweet-text");
       const statusUrl = $article.querySelector("span.tweet-action[href]")?.getAttribute("href");
       if ($tweetText !== null && statusUrl !== null) {
-        // ツイート本文がリンクで終わらず、「…」で終わるが「……」では終わらない場合
+        // Expand Tweet を出す条件
+        // すでにExpand Tweet がなく、リンクを除くツイート本文が「…」で終わるが「……」では終わらない
+        const containsExpandTweet = $tweetText.lastElementChild?.textContent == expanderPhrase;
         const $lastTextNode = Array.from($tweetText.childNodes)
           .reverse()
           .find((node) => node.nodeType == Node.TEXT_NODE);
-        if ($lastTextNode?.textContent?.endsWith("…") && !$lastTextNode?.textContent?.endsWith("……")) {
+        const lastText = $lastTextNode?.textContent ?? "";
+        if (!containsExpandTweet && lastText.endsWith("…") && !lastText.endsWith("……")) {
           const id = $article.getAttribute("data-tweet-id");
           // OTD が実装している expandTweet() を呼び出す
-          $tweetText.innerHTML += `&nbsp;<a class="expand-tweet" href="${statusUrl}" onclick="expandTweet(event, '${id}')">Expand tweet</a>`;
+          const $expandTweet: HTMLAnchorElement = <HTMLAnchorElement>document.createElement("a");
+          $expandTweet.setAttribute("class", "expand-tweet");
+          $expandTweet.setAttribute("href", "expandTweet(event, '${id}')");
+          $expandTweet.textContent = expanderPhrase;
+          $tweetText.textContent += "\u{a0}";
+          $tweetText.appendChild($expandTweet);
         }
       }
     });
