@@ -55,5 +55,8 @@
   },
   "configOptionShowInitialInColumnTab": {
     "message": "Show initial of list (user) name in list (user) tab"
+  },
+  "configOptionDisablePinchZoom": {
+    "message": "Disable pinch zoom"
   }
 }

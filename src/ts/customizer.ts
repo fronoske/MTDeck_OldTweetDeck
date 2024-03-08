@@ -12,6 +12,7 @@ export class AppContainerCustomizer {
     const configShowExpander = this.bodyClassList.contains("mtdeck-show-expander");
     const configEnableSwipeCol = this.bodyClassList.contains("mtdeck-enable-swipe-col");
     const configShowInitialInColumnTab = this.bodyClassList.contains("mtdeck-show-initial-in-col-tab");
+    const configDisalbePinchZoom = this.bodyClassList.contains("mtdeck-disalbe-pinch-zoom");
 
     // Enable Swipe Navigation in Columns
     if (configEnableSwipeCol) {
@@ -29,6 +30,17 @@ export class AppContainerCustomizer {
     // カラムタブにリスト名の頭文字を表示する
     if (configShowInitialInColumnTab) {
       this.showInitialInColumnTab();
+    }
+    // ピンチ操作を無効にする
+    if (configDisalbePinchZoom) {
+      const pinchDisabler = (event: any) => {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      };
+      document.addEventListener("touchstart", pinchDisabler, {
+        passive: false,
+      });
     }
   }
 
@@ -254,7 +266,7 @@ export class MediaPanelCustomizer {
       switch (direction) {
         case "up":
           const imgLink = document.querySelector<HTMLImageElement>("img.media-img")?.parentElement;
-          this.showFullImageOnTap(imgLink as HTMLAnchorElement, "full");
+          this.showFullImageOnTap(imgLink as HTMLAnchorElement, "max");
           break;
         case "down":
           document.querySelector<HTMLAnchorElement>("a.mdl-dismiss")?.click();
@@ -304,10 +316,14 @@ export class MediaPanelCustomizer {
     const imgSrc = $image?.getAttribute("src")!;
     const $fullImage = document.createElement("img");
     $fullImage.setAttribute("src", imgSrc);
-    $fullImage.setAttribute("class", size == "full" ? "full-image-max" : "full-image");
+    $fullImage.setAttribute("class", size == "max" ? "full-image-max" : "full-image");
     // フル画像を貼り付けるオーバーレイ要素を生成する
     const $fullMediaBox = document.createElement("div");
     $fullMediaBox.setAttribute("class", "full-media-box");
+    if (size == "max") {
+      $fullMediaBox.style.width = "auto";
+      $fullMediaBox.style.height = "auto";
+    }
     $fullMediaBox.appendChild($fullImage);
     this.$mediaPanel.appendChild($fullMediaBox);
 

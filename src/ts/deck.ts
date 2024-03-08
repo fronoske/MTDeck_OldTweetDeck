@@ -106,6 +106,10 @@ export class Deck {
     if (this.config.getBoolean("mtdShowInitialInColumnTab")) {
       document.body.classList.add("mtdeck-show-initial-in-col-tab");
     }
+    if (this.config.getBoolean("mtdDisablePinchZoom")) {
+      document.body.classList.add("mtdeck-disalbe-pinch-zoom");
+    }
+
     new AppContainerCustomizer().doCustomize(this);
     new MediaPanelCustomizer().doCustomize();
 

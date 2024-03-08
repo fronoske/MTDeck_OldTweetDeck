@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name MTDeck for OTD
-// @version 2.1.2
+// @version 2.2.0
 // @author mkizka, kdroidwin, and fronoske
 // @description TweetDeckをスマホアプリのように使えるようにするUserScript (OTD対応版) mod by fronoske
 // @homepage https://github.com/fronoske/MTDeck_for_OTD
@@ -66,6 +66,9 @@
   var configOptionShowInitialInColumnTab = {
   	message: "Show initial of list (user) name in list (user) tab"
   };
+  var configOptionDisablePinchZoom = {
+  	message: "Disable pinch zoom"
+  };
   var messagesEN = {
   	extensionDescription: extensionDescription,
   	configTitle: configTitle,
@@ -85,7 +88,8 @@
   	configOptionShowExpander: configOptionShowExpander,
   	configOptionEnableSwipeDownToCloseMedia: configOptionEnableSwipeDownToCloseMedia,
   	configOptionEnableTapToShowFullImage: configOptionEnableTapToShowFullImage,
-  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab
+  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab,
+  	configOptionDisablePinchZoom: configOptionDisablePinchZoom
   };
 
   var extensionDescription$1 = {
@@ -145,6 +149,9 @@
   var configOptionShowInitialInColumnTab$1 = {
   	message: "タブにリスト名とユーザー名の頭文字を表示する"
   };
+  var configOptionDisablePinchZoom$1 = {
+  	message: "ピンチ操作を禁止する"
+  };
   var messagesJA = {
   	extensionDescription: extensionDescription$1,
   	configTitle: configTitle$1,
@@ -164,7 +171,8 @@
   	configOptionShowExpander: configOptionShowExpander$1,
   	configOptionEnableSwipeDownToCloseMedia: configOptionEnableSwipeDownToCloseMedia$1,
   	configOptionEnableTapToShowFullImage: configOptionEnableTapToShowFullImage$1,
-  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab$1
+  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab$1,
+  	configOptionDisablePinchZoom: configOptionDisablePinchZoom$1
   };
 
   const messages = {
@@ -424,7 +432,7 @@
       }
   }
 
-  var version = "2.1.2";
+  var version = "2.2.0";
 
   class Config {
       constructor() {
@@ -511,6 +519,12 @@
               {
                   label: _("configOptionShowInitialInColumnTab"),
                   name: "mtdShowInitialInColumnTab",
+                  type: "checkbox",
+                  default: "false",
+              },
+              {
+                  label: _("configOptionDisablePinchZoom"),
+                  name: "mtdDisablePinchZoom",
                   type: "checkbox",
                   default: "false",
               },
@@ -637,6 +651,7 @@
           const configShowExpander = this.bodyClassList.contains("mtdeck-show-expander");
           const configEnableSwipeCol = this.bodyClassList.contains("mtdeck-enable-swipe-col");
           const configShowInitialInColumnTab = this.bodyClassList.contains("mtdeck-show-initial-in-col-tab");
+          const configDisalbePinchZoom = this.bodyClassList.contains("mtdeck-disalbe-pinch-zoom");
           // Enable Swipe Navigation in Columns
           if (configEnableSwipeCol) {
               this.enableSwipeNavCol(mtd);
@@ -653,6 +668,17 @@
           // カラムタブにリスト名の頭文字を表示する
           if (configShowInitialInColumnTab) {
               this.showInitialInColumnTab();
+          }
+          // ピンチ操作を無効にする
+          if (configDisalbePinchZoom) {
+              const pinchDisabler = (event) => {
+                  if (event.touches.length > 1) {
+                      event.preventDefault();
+                  }
+              };
+              document.addEventListener("touchstart", pinchDisabler, {
+                  passive: false,
+              });
           }
       }
       showInitialInColumnTab() {
@@ -867,7 +893,7 @@
               switch (direction) {
                   case "up":
                       const imgLink = (_a = document.querySelector("img.media-img")) === null || _a === void 0 ? void 0 : _a.parentElement;
-                      this.showFullImageOnTap(imgLink, "full");
+                      this.showFullImageOnTap(imgLink, "max");
                       break;
                   case "down":
                       (_b = document.querySelector("a.mdl-dismiss")) === null || _b === void 0 ? void 0 : _b.click();
@@ -912,10 +938,14 @@
           const imgSrc = $image === null || $image === void 0 ? void 0 : $image.getAttribute("src");
           const $fullImage = document.createElement("img");
           $fullImage.setAttribute("src", imgSrc);
-          $fullImage.setAttribute("class", size == "full" ? "full-image-max" : "full-image");
+          $fullImage.setAttribute("class", size == "max" ? "full-image-max" : "full-image");
           // フル画像を貼り付けるオーバーレイ要素を生成する
           const $fullMediaBox = document.createElement("div");
           $fullMediaBox.setAttribute("class", "full-media-box");
+          if (size == "max") {
+              $fullMediaBox.style.width = "auto";
+              $fullMediaBox.style.height = "auto";
+          }
           $fullMediaBox.appendChild($fullImage);
           this.$mediaPanel.appendChild($fullMediaBox);
           // イベントリスナ
@@ -1033,6 +1063,9 @@
           }
           if (this.config.getBoolean("mtdShowInitialInColumnTab")) {
               document.body.classList.add("mtdeck-show-initial-in-col-tab");
+          }
+          if (this.config.getBoolean("mtdDisablePinchZoom")) {
+              document.body.classList.add("mtdeck-disalbe-pinch-zoom");
           }
           new AppContainerCustomizer().doCustomize(this);
           new MediaPanelCustomizer().doCustomize();
