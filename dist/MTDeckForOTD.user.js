@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name MTDeck for OTD
-// @version 2.1.2
+// @version 2.2.0
 // @author mkizka, kdroidwin, and fronoske
 // @description TweetDeckをスマホアプリのように使えるようにするUserScript (OTD対応版) mod by fronoske
 // @homepage https://github.com/fronoske/MTDeck_for_OTD
@@ -432,7 +432,7 @@
       }
   }
 
-  var version = "2.1.2";
+  var version = "2.2.0";
 
   class Config {
       constructor() {
@@ -671,12 +671,12 @@
           }
           // ピンチ操作を無効にする
           if (configDisalbePinchZoom) {
-              const touchHandler = (event) => {
+              const pinchDisabler = (event) => {
                   if (event.touches.length > 1) {
                       event.preventDefault();
                   }
               };
-              document.addEventListener("touchstart", touchHandler, {
+              document.addEventListener("touchstart", pinchDisabler, {
                   passive: false,
               });
           }
@@ -893,7 +893,7 @@
               switch (direction) {
                   case "up":
                       const imgLink = (_a = document.querySelector("img.media-img")) === null || _a === void 0 ? void 0 : _a.parentElement;
-                      this.showFullImageOnTap(imgLink, "full");
+                      this.showFullImageOnTap(imgLink, "max");
                       break;
                   case "down":
                       (_b = document.querySelector("a.mdl-dismiss")) === null || _b === void 0 ? void 0 : _b.click();
@@ -938,10 +938,14 @@
           const imgSrc = $image === null || $image === void 0 ? void 0 : $image.getAttribute("src");
           const $fullImage = document.createElement("img");
           $fullImage.setAttribute("src", imgSrc);
-          $fullImage.setAttribute("class", size == "full" ? "full-image-max" : "full-image");
+          $fullImage.setAttribute("class", size == "max" ? "full-image-max" : "full-image");
           // フル画像を貼り付けるオーバーレイ要素を生成する
           const $fullMediaBox = document.createElement("div");
           $fullMediaBox.setAttribute("class", "full-media-box");
+          if (size == "max") {
+              $fullMediaBox.style.width = "auto";
+              $fullMediaBox.style.height = "auto";
+          }
           $fullMediaBox.appendChild($fullImage);
           this.$mediaPanel.appendChild($fullMediaBox);
           // イベントリスナ
