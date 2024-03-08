@@ -153,7 +153,7 @@ export class Config {
       <div class="mtdeck-config-item">
         <p>MTDeck v${version}</p>
         <p>${_("configLinksLabel")}:
-          <a href="https://github.com/fronoske/MTDeck_for_OTD" target="_blank">Github</a>
+          <a href="https://github.com/fronoske/MTDeck_OldTweetDeck" target="_blank">Github</a>
           <a href="https://twitter.com/fronoske">Twitter</a>
         </p>
       </div>
