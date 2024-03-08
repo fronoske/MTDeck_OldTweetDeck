@@ -66,6 +66,9 @@
   var configOptionShowInitialInColumnTab = {
   	message: "Show initial of list (user) name in list (user) tab"
   };
+  var configOptionDisablePinchZoom = {
+  	message: "Disable pinch zoom"
+  };
   var messagesEN = {
   	extensionDescription: extensionDescription,
   	configTitle: configTitle,
@@ -85,7 +88,8 @@
   	configOptionShowExpander: configOptionShowExpander,
   	configOptionEnableSwipeDownToCloseMedia: configOptionEnableSwipeDownToCloseMedia,
   	configOptionEnableTapToShowFullImage: configOptionEnableTapToShowFullImage,
-  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab
+  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab,
+  	configOptionDisablePinchZoom: configOptionDisablePinchZoom
   };
 
   var extensionDescription$1 = {
@@ -145,6 +149,9 @@
   var configOptionShowInitialInColumnTab$1 = {
   	message: "タブにリスト名とユーザー名の頭文字を表示する"
   };
+  var configOptionDisablePinchZoom$1 = {
+  	message: "ピンチ操作を禁止する"
+  };
   var messagesJA = {
   	extensionDescription: extensionDescription$1,
   	configTitle: configTitle$1,
@@ -164,7 +171,8 @@
   	configOptionShowExpander: configOptionShowExpander$1,
   	configOptionEnableSwipeDownToCloseMedia: configOptionEnableSwipeDownToCloseMedia$1,
   	configOptionEnableTapToShowFullImage: configOptionEnableTapToShowFullImage$1,
-  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab$1
+  	configOptionShowInitialInColumnTab: configOptionShowInitialInColumnTab$1,
+  	configOptionDisablePinchZoom: configOptionDisablePinchZoom$1
   };
 
   const messages = {
@@ -514,6 +522,12 @@
                   type: "checkbox",
                   default: "false",
               },
+              {
+                  label: _("configOptionDisablePinchZoom"),
+                  name: "mtdDisablePinchZoom",
+                  type: "checkbox",
+                  default: "false",
+              },
           ];
       }
       getString(key) {
@@ -637,6 +651,7 @@
           const configShowExpander = this.bodyClassList.contains("mtdeck-show-expander");
           const configEnableSwipeCol = this.bodyClassList.contains("mtdeck-enable-swipe-col");
           const configShowInitialInColumnTab = this.bodyClassList.contains("mtdeck-show-initial-in-col-tab");
+          const configDisalbePinchZoom = this.bodyClassList.contains("mtdeck-disalbe-pinch-zoom");
           // Enable Swipe Navigation in Columns
           if (configEnableSwipeCol) {
               this.enableSwipeNavCol(mtd);
@@ -653,6 +668,17 @@
           // カラムタブにリスト名の頭文字を表示する
           if (configShowInitialInColumnTab) {
               this.showInitialInColumnTab();
+          }
+          // ピンチ操作を無効にする
+          if (configDisalbePinchZoom) {
+              const touchHandler = (event) => {
+                  if (event.touches.length > 1) {
+                      event.preventDefault();
+                  }
+              };
+              document.addEventListener("touchstart", touchHandler, {
+                  passive: false,
+              });
           }
       }
       showInitialInColumnTab() {
@@ -1033,6 +1059,9 @@
           }
           if (this.config.getBoolean("mtdShowInitialInColumnTab")) {
               document.body.classList.add("mtdeck-show-initial-in-col-tab");
+          }
+          if (this.config.getBoolean("mtdDisablePinchZoom")) {
+              document.body.classList.add("mtdeck-disalbe-pinch-zoom");
           }
           new AppContainerCustomizer().doCustomize(this);
           new MediaPanelCustomizer().doCustomize();

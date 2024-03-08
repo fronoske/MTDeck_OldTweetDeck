@@ -12,6 +12,7 @@ export class AppContainerCustomizer {
     const configShowExpander = this.bodyClassList.contains("mtdeck-show-expander");
     const configEnableSwipeCol = this.bodyClassList.contains("mtdeck-enable-swipe-col");
     const configShowInitialInColumnTab = this.bodyClassList.contains("mtdeck-show-initial-in-col-tab");
+    const configDisalbePinchZoom = this.bodyClassList.contains("mtdeck-disalbe-pinch-zoom");
 
     // Enable Swipe Navigation in Columns
     if (configEnableSwipeCol) {
@@ -29,6 +30,17 @@ export class AppContainerCustomizer {
     // カラムタブにリスト名の頭文字を表示する
     if (configShowInitialInColumnTab) {
       this.showInitialInColumnTab();
+    }
+    // ピンチ操作を無効にする
+    if (configDisalbePinchZoom) {
+      const touchHandler = (event: any) => {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      };
+      document.addEventListener("touchstart", touchHandler, {
+        passive: false,
+      });
     }
   }
 
