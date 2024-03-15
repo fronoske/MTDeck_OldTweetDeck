@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name MTDeck for OTD
-// @version 2.2.1
+// @version 2.2.2
 // @author mkizka, kdroidwin, and fronoske
 // @description TweetDeckをスマホアプリのように使えるようにするUserScript (OTD対応版) mod by fronoske
 // @homepage https://github.com/fronoske/MTDeck_OldTweetDeck
@@ -55,7 +55,7 @@
   	message: "Enable horizontal swipe to prev/next column"
   };
   var configOptionShowExpander = {
-  	message: "Show 'Expand tweet' button"
+  	message: "Ease 'Expand Tweet' appearance conditions"
   };
   var configOptionEnableSwipeDownToCloseMedia = {
   	message: "Enable swipe down to close media"
@@ -138,7 +138,7 @@
   	message: "横スワイプでカラムを移動する"
   };
   var configOptionShowExpander$1 = {
-  	message: "長文ツイートの場合に「Expand tweet」を表示する"
+  	message: "「Expand tweet」の出現条件を緩和する"
   };
   var configOptionEnableSwipeDownToCloseMedia$1 = {
   	message: "下スワイプで画像を閉じる"
@@ -432,7 +432,7 @@
       }
   }
 
-  var version = "2.2.1";
+  var version = "2.2.2";
 
   class Config {
       constructor() {
@@ -744,28 +744,28 @@
   }
   class TweetExpander {
       addExpandTweetButton() {
-          const expanderPhrase = "(Expand tweet)";
           const $articles = document.querySelectorAll("article.js-stream-item");
           $articles.forEach(($article) => {
-              var _a, _b, _c;
+              var _a, _b, _c, _d, _e, _f;
+              const expanderPhrase = "Expand tweet";
               const $tweetText = $article.querySelector(".js-tweet-text");
-              const statusUrl = (_a = $article.querySelector("span.tweet-action[href]")) === null || _a === void 0 ? void 0 : _a.getAttribute("href");
-              if ($tweetText !== null && statusUrl !== null) {
-                  // Expand Tweet を出す条件
-                  // すでにExpand Tweet がなく、リンクを除くツイート本文が「…」で終わるが「……」では終わらない
-                  const containsExpandTweet = ((_b = $tweetText.lastElementChild) === null || _b === void 0 ? void 0 : _b.textContent) == expanderPhrase;
+              //const statusUrl = $article.querySelector("span.tweet-action[href]")?.getAttribute("href");
+              const statusUrl = (_a = $article.querySelector("a[href^='https://twitter.com/'][rel='url']")) === null || _a === void 0 ? void 0 : _a.getAttribute("href");
+              if ($tweetText !== null && ((_b = $tweetText === null || $tweetText === void 0 ? void 0 : $tweetText.lastElementChild) === null || _b === void 0 ? void 0 : _b.textContent) != expanderPhrase && statusUrl !== null) {
+                  // Expand Tweet を出す条件：まだ「Expand Tweet」がなく、リンクを除くツイート本文が「…」で終わっており、ツイート本文に句読点がある
                   const $lastTextNode = Array.from($tweetText.childNodes)
                       .reverse()
                       .find((node) => node.nodeType == Node.TEXT_NODE);
-                  const lastText = (_c = $lastTextNode === null || $lastTextNode === void 0 ? void 0 : $lastTextNode.textContent) !== null && _c !== void 0 ? _c : "";
-                  if (!containsExpandTweet && lastText.endsWith("…") && !lastText.endsWith("……")) {
+                  const lastText = (_d = (_c = $lastTextNode === null || $lastTextNode === void 0 ? void 0 : $lastTextNode.textContent) === null || _c === void 0 ? void 0 : _c.trim()) !== null && _d !== void 0 ? _d : "";
+                  const tweetTextBody = (_f = (_e = $tweetText.textContent) === null || _e === void 0 ? void 0 : _e.trim()) !== null && _f !== void 0 ? _f : "";
+                  if (lastText.endsWith("…") && !lastText.endsWith("……") && /[。、]/.test(tweetTextBody)) {
                       const id = $article.getAttribute("data-tweet-id");
                       // OTD が実装している expandTweet() を呼び出す
                       const $expandTweet = document.createElement("a");
                       $expandTweet.setAttribute("class", "expand-tweet");
-                      $expandTweet.setAttribute("href", "expandTweet(event, '${id}')");
+                      $expandTweet.setAttribute("onclick", `expandTweet(event, '${id}')`);
                       $expandTweet.textContent = expanderPhrase;
-                      $tweetText.textContent += "\u{a0}";
+                      $tweetText.appendChild(document.createTextNode("\u{a0}"));
                       $tweetText.appendChild($expandTweet);
                   }
               }
@@ -829,6 +829,7 @@
           return dateString;
       }
   }
+
   // MediaPanelCustomizerクラス … メディア表示時のカスタマイズを司るクラス
   class MediaPanelCustomizer {
       constructor() {
@@ -843,27 +844,6 @@
               this.enableSwipeNavMedia();
           }
           if (configEnableSwipeDownToCloseMedia) {
-              insertStyle(`div.full-media-box {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(100, 100, 100, 0.8);
-          z-index: 99999;
-          /* 縦方向の中央寄せ */
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        /* 画像は横幅を max に */
-        img.full-image {
-          width: 100%;
-          height: auto;
-        }
-        img.full-image-max {
-        }
-        `);
               this.enableSwipeDownToCloseMedia();
           }
           if (cconfigEnableTapToShowFullImage) {
@@ -888,20 +868,21 @@
       enableSwipeDownToCloseMedia() {
           const touchManager = new TouchManager(this.$mediaPanel);
           touchManager.onSwipeY = (startY, direction) => {
-              var _a, _b;
+              var _a;
               console.log(direction);
               switch (direction) {
+                  /*
                   case "up":
-                      const imgLink = (_a = document.querySelector("img.media-img")) === null || _a === void 0 ? void 0 : _a.parentElement;
-                      this.showFullImageOnTap(imgLink, "max");
-                      break;
+                    const imgLink = document.querySelector<HTMLImageElement>("img.media-img")?.parentElement;
+                    this.resizeImageOnTap(imgLink as HTMLAnchorElement);
+                    break;
+                  */
                   case "down":
-                      (_b = document.querySelector("a.mdl-dismiss")) === null || _b === void 0 ? void 0 : _b.click();
+                      (_a = document.querySelector("a.mdl-dismiss")) === null || _a === void 0 ? void 0 : _a.click();
                       break;
               }
           };
       }
-      //TODO: 画像をほどよくサイズ変更したい
       enableShowFullImage() {
           const onNewMediaGenerated = (mutations) => {
               for (const mutation of mutations) {
@@ -918,7 +899,7 @@
                       if (mediaItems) {
                           mediaItems.forEach((item) => {
                               item.addEventListener("click", (e) => {
-                                  this.showFullImageOnTap(e.currentTarget, "normal");
+                                  this.resizeImageOnTap(e.currentTarget);
                               });
                           });
                       }
@@ -930,30 +911,48 @@
       }
       // フル画像を表示するためのボックスを用意し、そこに img src を流し込む
       // 閉じる仕組みも用意する。閉じたらボックスは廃棄する
-      showFullImageOnTap(item, size) {
+      resizeImageOnTap(item) {
           // 画像タップで original tweet に飛ぶのを抑止
           item.removeAttribute("href");
           // フル画像の要素を生成する
-          const $image = item.querySelector("img.media-img");
-          const imgSrc = $image === null || $image === void 0 ? void 0 : $image.getAttribute("src");
+          const $normalImage = item.querySelector("img.media-img");
+          const normalImageSource = $normalImage === null || $normalImage === void 0 ? void 0 : $normalImage.getAttribute("src");
+          const normalImageWidth = Number($normalImage === null || $normalImage === void 0 ? void 0 : $normalImage.getAttribute("data-maxwidth"));
+          const normalImageHeight = Number($normalImage === null || $normalImage === void 0 ? void 0 : $normalImage.getAttribute("data-maxheight"));
+          const imageWhRatio = normalImageHeight / normalImageWidth;
+          const screenWhRatio = screen.availHeight / screen.availWidth;
+          const landOrPort = imageWhRatio > screenWhRatio ? "port" : "land";
           const $fullImage = document.createElement("img");
-          $fullImage.setAttribute("src", imgSrc);
-          $fullImage.setAttribute("class", size == "max" ? "full-image-max" : "full-image");
+          $fullImage.setAttribute("src", normalImageSource);
+          $fullImage.setAttribute("class", `${landOrPort}-size-1`);
           // フル画像を貼り付けるオーバーレイ要素を生成する
           const $fullMediaBox = document.createElement("div");
           $fullMediaBox.setAttribute("class", "full-media-box");
-          if (size == "max") {
-              $fullMediaBox.style.width = "auto";
-              $fullMediaBox.style.height = "auto";
-          }
           $fullMediaBox.appendChild($fullImage);
           this.$mediaPanel.appendChild($fullMediaBox);
-          // イベントリスナ
-          // タップでフル画像のメディアボックスを廃棄
+          // タップイベントのリスナ
           $fullMediaBox.addEventListener("click", (e) => {
               var _a;
               e.stopPropagation();
-              (_a = e.currentTarget) === null || _a === void 0 ? void 0 : _a.remove();
+              const maxSizeLevel = 3;
+              const $fullImage = document.querySelector("div.full-media-box > img");
+              if ($fullImage === null) {
+                  return;
+              }
+              // 今がフルサイズなら閉じる（メディアボックスを廃棄）
+              if ($fullImage.classList.contains(`${landOrPort}-size-${maxSizeLevel}`)) {
+                  (_a = $fullImage.parentElement) === null || _a === void 0 ? void 0 : _a.remove();
+              }
+              else {
+                  // そうでなければサイズを大きくする
+                  const found = $fullImage.className.match(/size-(\d)/);
+                  if (found) {
+                      const sizeClassName = `${landOrPort}-${found[0]}`;
+                      const sizeLevel = Number(found[1]);
+                      $fullImage.classList.remove(sizeClassName);
+                      $fullImage.classList.add(`${landOrPort}-size-${sizeLevel + 1}`);
+                  }
+              }
           });
           // 下に伝播させない
           $fullMediaBox.addEventListener("touchstart", (e) => {
@@ -1151,7 +1150,7 @@
       });
   }
 
-  var styles = "@charset \"UTF-8\";\nbody.mtdeck {\n  /* カラム番号を表示しないようにする */\n  /* ヘッダー画像をもう少し暗くする */\n}\nbody.mtdeck button[data-drawer=compose] {\n  z-index: 1;\n  position: fixed !important;\n  right: 20px;\n  bottom: 60px;\n  width: 4rem !important;\n  height: 4rem !important;\n  filter: drop-shadow(5px 5px 5px rgba(0, 0, 0, 0.7));\n}\nbody.mtdeck .app-columns {\n  padding: 0 0 50px 0 !important;\n}\nbody.mtdeck .app-content {\n  left: 0 !important;\n}\nbody.mtdeck .app-columns-container {\n  overflow-x: hidden;\n  overflow-y: auto;\n}\nbody.mtdeck section.column,\nbody.mtdeck .js-modal-panel,\nbody.mtdeck .prf-header,\nbody.mtdeck .prf-header-inner-overlay,\nbody.mtdeck .social-proof-container {\n  width: 100% !important;\n}\nbody.mtdeck .overlay:before {\n  margin-right: -5px;\n}\nbody.mtdeck .mdl {\n  width: 100% !important;\n  overflow-x: hidden;\n}\nbody.mtdeck .mdl .mdl-inner {\n  padding: 5px;\n}\nbody.mtdeck .mdl .mdl-inner .js-right-column {\n  overflow-x: hidden;\n}\nbody.mtdeck .mdl .mdl-inner .mdl-column:first-child {\n  display: none;\n}\nbody.mtdeck .mdl .mdl-inner .mdl-column:not(:first-child) {\n  width: 100% !important;\n}\nbody.mtdeck .mdl .mdl-dismiss {\n  right: 10px !important;\n}\nbody.mtdeck .med-tweet {\n  width: 100% !important;\n  left: 0 !important;\n}\nbody.mtdeck .old-composer-footer,\nbody.mtdeck .column-nav-flyout {\n  display: none;\n}\nbody.mtdeck .js-search-in-popover .popover {\n  width: 200px !important;\n}\nbody.mtdeck .js-mediaembed .js-media-native-video,\nbody.mtdeck .js-mediaembed .youtube-player {\n  width: 100% !important;\n  position: fixed;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  margin: auto !important;\n  z-index: 1;\n}\nbody.mtdeck .column-navigator {\n  top: 50px;\n}\nbody.mtdeck .column-nav-link:after {\n  display: none;\n}\nbody.mtdeck div.prf-header-inner-overlay {\n  background-image: linear-gradient(transparent, rgba(20, 23, 26, 0.9));\n}\n\nbody.mtdeck .app-content {\n  will-change: transform;\n}\nbody.mtdeck .app-content.is-open {\n  margin-right: 0 !important;\n  transform: translateX(100%) !important;\n}\nbody.mtdeck .drawer[data-drawer=compose] {\n  left: -100%;\n  width: 100%;\n}\nbody.mtdeck .drawer[data-drawer=accountSettings] {\n  left: calc(-1 * 100vw + 60px);\n  width: calc(100vw - 60px);\n}\nbody.mtdeck button.js-hide-drawer {\n  display: none !important;\n}\n\nbody.mtdeck .js-int-scroller {\n  display: flex;\n  justify-content: space-between;\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  background-color: #1c2938;\n  overflow-x: auto;\n  white-space: nowrap;\n  padding-top: 10px;\n  height: 40px;\n}\nbody.mtdeck .js-int-scroller .column-nav-item {\n  height: 35px;\n}\nbody.mtdeck .js-int-scroller .column-nav-item .icon-medium {\n  font-size: 20px;\n}\nbody.mtdeck .js-int-scroller .column-nav-item .js-header-action {\n  padding-left: 12px !important;\n  padding-right: 12px !important;\n}\nbody.mtdeck .hide-detail-view-inline .js-int-scroller,\nbody.mtdeck .with-nav-border-t:before {\n  display: none;\n}\nbody.mtdeck .column-nav-item {\n  display: inline-block;\n}\n\nbody.mtdeck-close header.app-header {\n  position: relative;\n  top: -50px;\n}\nbody.mtdeck-close div.app-columns-container {\n  left: 0 !important;\n}\n\nhtml.dark .mtdeck-config {\n  background-color: #1c2938;\n}\n\n.mtdeck-config {\n  display: none;\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  z-index: 201;\n  background-color: #fff;\n  padding: 20px;\n}\n.mtdeck-config.is-open {\n  display: block;\n}\n.mtdeck-config-button {\n  color: blueviolet !important;\n}\n.mtdeck-config-item {\n  margin-bottom: 8px !important;\n  /* 設定項目の行間を狭める */\n}\n.mtdeck-config-input[type=number] {\n  width: 80px;\n  margin-right: 10px;\n}\n.mtdeck-config-footer {\n  position: fixed;\n  bottom: 20px;\n}\n\nbody.mtdeck-no-animation,\nbody.mtdeck-no-animation *:not(iframe) {\n  transition-duration: 1ms !important;\n}\n\nbody.mtdeck-hide-images .js-media:not(.detail-preview) {\n  height: 25px !important;\n  border-radius: 0 !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-sensitive {\n  height: 1rem;\n  background-color: transparent;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-sensitive::before {\n  content: \"[sensitive]\";\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-sensitive div {\n  display: none;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container {\n  width: 100% !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-item,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-image,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-item,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-image {\n  height: 0;\n  width: max-content;\n  background-image: none !important;\n  border-radius: 0;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-item::before,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-image::before,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-item::before,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-image::before {\n  content: \"[media]\";\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-item *,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-image *,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-item *,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-image * {\n  display: none !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:not(:first-child) {\n  display: none !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:not(:first-child) .media-item,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:not(:first-child) .media-image {\n  background-image: none !important;\n}\nbody.mtdeck-hide-images .item-box-full-bleed .media-item,\nbody.mtdeck-hide-images .item-box-full-bleed .media-image {\n  margin: auto !important;\n}\n\nbody.mtdeck-hide-counts .reply-count, body.mtdeck-hide-counts .retweet-count, body.mtdeck-hide-counts .like-count {\n  display: none;\n}\nbody.mtdeck-hide-counts .app-columns .column-detail .tweet-detail footer .js-tweet-stats {\n  display: none;\n}\n\nbody.mtdeck-lazy-load-image .media-item,\nbody.mtdeck-lazy-load-image .media-image {\n  background-image: none !important;\n}\n\nbody.mtdeck-mobile .item-box {\n  padding: 12px 16px;\n}\nbody.mtdeck-mobile .item-box .item-img {\n  width: 48px;\n}\nbody.mtdeck-mobile .item-box .avatar {\n  width: 48px;\n  height: 48px;\n}\nbody.mtdeck-mobile .item-box .dropdown-menu {\n  width: 90vw;\n  margin-right: -5vw;\n  font-size: 15px;\n}\nbody.mtdeck-mobile .item-box .dropdown-menu .caret {\n  right: 13px;\n}\nbody.mtdeck-mobile .item-box .dropdown-menu [data-action] {\n  padding: 8px 20px;\n}\nbody.mtdeck-mobile .item-box .tweet {\n  padding-left: 60px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-header {\n  margin-bottom: 2px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-header .tweet-img {\n  margin-left: -60px;\n}\nbody.mtdeck-mobile .item-box .tweet .thread {\n  left: 38px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-body .other-replies {\n  margin-bottom: 2px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-footer {\n  margin-top: 12px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-footer .tweet-actions {\n  display: flex;\n  justify-content: space-between;\n}\nbody.mtdeck-mobile .item-box .tweet .js-show-this-thread > p {\n  margin-top: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail.js-has-replies {\n  margin-left: 48px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail.js-has-replies .thread {\n  left: 38px;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .account-summary {\n  margin-bottom: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .account-summary .item-img {\n  margin-right: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .account-summary .tweet-text {\n  margin-bottom: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .tweet-detail-actions {\n  padding-top: 4px;\n  padding-bottom: 4px;\n}\nbody.mtdeck-mobile .item-box .activity-header {\n  display: flex;\n  align-items: center;\n  margin-top: 0;\n  margin-bottom: 2px;\n}\nbody.mtdeck-mobile .item-box .activity-header .item-img {\n  margin-top: 0 !important;\n}\nbody.mtdeck-mobile .item-box .activity-header i {\n  font-size: 1.3em !important;\n  line-height: 1em;\n}\nbody.mtdeck-mobile .item-box .activity-header i.icon-user-filled {\n  font-size: 1em !important;\n}\nbody.mtdeck-mobile .item-box .activity-header .avatar {\n  width: 30px;\n  height: 30px;\n}\nbody.mtdeck-mobile .item-box .quoted-tweet, body.mtdeck-mobile .item-box .media-preview {\n  margin-top: 12px !important;\n  margin-bottom: 0 !important;\n}\nbody.mtdeck-mobile .item-box video {\n  width: 100%;\n  height: auto;\n}\n\nbody.mtdeck[data-btd-ready=true] .media-size-medium.btd-aspect-ratio-thumbnail,\nbody.mtdeck[data-btd-ready=true] .media-size-large.btd-aspect-ratio-thumbnail {\n  padding-top: calc(var(--btd-thumb-height) / var(--btd-thumb-width) * 100%);\n}\nbody.mtdeck[data-btd-ready=true] .js-int-scroller {\n  background-color: var(--btd-theme-background-lighter);\n}";
+  var styles = "@charset \"UTF-8\";\nbody.mtdeck {\n  /* カラム番号を表示しないようにする */\n  /* ヘッダー画像をもう少し暗くする */\n  /* 画像のフルサイズ表示 */\n  /* 端末の表示領域全体を暗くする */\n  /* 画像のサイズ */\n  /* ランドスケープ（横長）用 Level1。幅が画面幅、縦が auto */\n  /* ランドスケープ（横長）用 Level2。幅が auto、縦が画面の高さ */\n  /* ポートレート（縦長）用。幅がフルサイズ、縦が画面の高さ */\n  /* ポートレート（縦長）用。幅がフルサイズ、縦が画面の高さ */\n  /* フルサイズ */\n  /* フルサイズ */\n}\nbody.mtdeck button[data-drawer=compose] {\n  z-index: 1;\n  position: fixed !important;\n  right: 20px;\n  bottom: 60px;\n  width: 4rem !important;\n  height: 4rem !important;\n  filter: drop-shadow(5px 5px 5px rgba(0, 0, 0, 0.7));\n}\nbody.mtdeck .app-columns {\n  padding: 0 0 50px 0 !important;\n}\nbody.mtdeck .app-content {\n  left: 0 !important;\n}\nbody.mtdeck .app-columns-container {\n  overflow-x: hidden;\n  overflow-y: auto;\n}\nbody.mtdeck section.column,\nbody.mtdeck .js-modal-panel,\nbody.mtdeck .prf-header,\nbody.mtdeck .prf-header-inner-overlay,\nbody.mtdeck .social-proof-container {\n  width: 100% !important;\n}\nbody.mtdeck .overlay:before {\n  margin-right: -5px;\n}\nbody.mtdeck .mdl {\n  width: 100% !important;\n  overflow-x: hidden;\n}\nbody.mtdeck .mdl .mdl-inner {\n  padding: 5px;\n}\nbody.mtdeck .mdl .mdl-inner .js-right-column {\n  overflow-x: hidden;\n}\nbody.mtdeck .mdl .mdl-inner .mdl-column:first-child {\n  display: none;\n}\nbody.mtdeck .mdl .mdl-inner .mdl-column:not(:first-child) {\n  width: 100% !important;\n}\nbody.mtdeck .mdl .mdl-dismiss {\n  right: 10px !important;\n}\nbody.mtdeck .med-tweet {\n  width: 100% !important;\n  left: 0 !important;\n}\nbody.mtdeck .old-composer-footer,\nbody.mtdeck .column-nav-flyout {\n  display: none;\n}\nbody.mtdeck .js-search-in-popover .popover {\n  width: 200px !important;\n}\nbody.mtdeck .js-mediaembed .js-media-native-video,\nbody.mtdeck .js-mediaembed .youtube-player {\n  width: 100% !important;\n  position: fixed;\n  left: 0;\n  top: 0;\n  bottom: 0;\n  margin: auto !important;\n  z-index: 1;\n}\nbody.mtdeck .column-navigator {\n  top: 50px;\n}\nbody.mtdeck .column-nav-link:after {\n  display: none;\n}\nbody.mtdeck div.prf-header-inner-overlay {\n  background-image: linear-gradient(transparent, rgba(20, 23, 26, 0.9));\n}\nbody.mtdeck div.full-media-box {\n  position: absolute;\n  left: 0;\n  top: 0;\n  width: 100%;\n  height: 100%;\n  background: rgba(100, 100, 100, 0.8);\n  z-index: 99999;\n  /* 縦方向の中央寄せ */\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}\nbody.mtdeck div.full-media-box > img.land-size-1 {\n  position: absolute;\n  top: auto;\n  left: 0;\n  width: 100%;\n  height: auto;\n}\nbody.mtdeck div.full-media-box > img.land-size-2 {\n  position: absolute;\n  top: 0;\n  left: auto;\n  width: auto;\n  height: 100%;\n}\nbody.mtdeck div.full-media-box > img.port-size-1 {\n  position: absolute;\n  top: 0;\n  left: auto;\n  width: auto;\n  height: 100%;\n}\nbody.mtdeck div.full-media-box > img.port-size-2 {\n  position: absolute;\n  top: auto;\n  left: 0;\n  width: 100%;\n  height: auto;\n}\nbody.mtdeck div.full-media-box > img.land-size-3 {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: auto;\n  height: auto;\n}\nbody.mtdeck div.full-media-box > img.port-size-3 {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: auto;\n  height: auto;\n}\n\nbody.mtdeck .app-content {\n  will-change: transform;\n}\nbody.mtdeck .app-content.is-open {\n  margin-right: 0 !important;\n  transform: translateX(100%) !important;\n}\nbody.mtdeck .drawer[data-drawer=compose] {\n  left: -100%;\n  width: 100%;\n}\nbody.mtdeck .drawer[data-drawer=accountSettings] {\n  left: calc(-1 * 100vw + 60px);\n  width: calc(100vw - 60px);\n}\nbody.mtdeck button.js-hide-drawer {\n  display: none !important;\n}\n\nbody.mtdeck .js-int-scroller {\n  display: flex;\n  justify-content: space-between;\n  position: fixed;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  background-color: #1c2938;\n  overflow-x: auto;\n  white-space: nowrap;\n  padding-top: 10px;\n  height: 40px;\n}\nbody.mtdeck .js-int-scroller .column-nav-item {\n  height: 35px;\n}\nbody.mtdeck .js-int-scroller .column-nav-item .icon-medium {\n  font-size: 20px;\n}\nbody.mtdeck .js-int-scroller .column-nav-item .js-header-action {\n  padding-left: 12px !important;\n  padding-right: 12px !important;\n}\nbody.mtdeck .hide-detail-view-inline .js-int-scroller,\nbody.mtdeck .with-nav-border-t:before {\n  display: none;\n}\nbody.mtdeck .column-nav-item {\n  display: inline-block;\n}\n\nbody.mtdeck-close header.app-header {\n  position: relative;\n  top: -50px;\n}\nbody.mtdeck-close div.app-columns-container {\n  left: 0 !important;\n}\n\nhtml.dark .mtdeck-config {\n  background-color: #1c2938;\n}\n\n.mtdeck-config {\n  display: none;\n  width: 100%;\n  height: 100%;\n  position: fixed;\n  z-index: 201;\n  background-color: #fff;\n  padding: 20px;\n}\n.mtdeck-config.is-open {\n  display: block;\n}\n.mtdeck-config-button {\n  color: blueviolet !important;\n}\n.mtdeck-config-item {\n  margin-bottom: 8px !important;\n  /* 設定項目の行間を狭める */\n}\n.mtdeck-config-input[type=number] {\n  width: 80px;\n  margin-right: 10px;\n}\n.mtdeck-config-footer {\n  position: fixed;\n  bottom: 20px;\n}\n\nbody.mtdeck-no-animation,\nbody.mtdeck-no-animation *:not(iframe) {\n  transition-duration: 1ms !important;\n}\n\nbody.mtdeck-hide-images .js-media:not(.detail-preview) {\n  height: 25px !important;\n  border-radius: 0 !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-sensitive {\n  height: 1rem;\n  background-color: transparent;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-sensitive::before {\n  content: \"[sensitive]\";\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-sensitive div {\n  display: none;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container {\n  width: 100% !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-item,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-image,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-item,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-image {\n  height: 0;\n  width: max-content;\n  background-image: none !important;\n  border-radius: 0;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-item::before,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-image::before,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-item::before,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-image::before {\n  content: \"[media]\";\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-item *,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:first-child .media-image *,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-item *,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .js-media-preview-container .media-image * {\n  display: none !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:not(:first-child) {\n  display: none !important;\n}\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:not(:first-child) .media-item,\nbody.mtdeck-hide-images .js-media:not(.detail-preview) .media-image-container:not(:first-child) .media-image {\n  background-image: none !important;\n}\nbody.mtdeck-hide-images .item-box-full-bleed .media-item,\nbody.mtdeck-hide-images .item-box-full-bleed .media-image {\n  margin: auto !important;\n}\n\nbody.mtdeck-hide-counts .reply-count, body.mtdeck-hide-counts .retweet-count, body.mtdeck-hide-counts .like-count {\n  display: none;\n}\nbody.mtdeck-hide-counts .app-columns .column-detail .tweet-detail footer .js-tweet-stats {\n  display: none;\n}\n\nbody.mtdeck-lazy-load-image .media-item,\nbody.mtdeck-lazy-load-image .media-image {\n  background-image: none !important;\n}\n\nbody.mtdeck-mobile .item-box {\n  padding: 12px 16px;\n}\nbody.mtdeck-mobile .item-box .item-img {\n  width: 48px;\n}\nbody.mtdeck-mobile .item-box .avatar {\n  width: 48px;\n  height: 48px;\n}\nbody.mtdeck-mobile .item-box .dropdown-menu {\n  width: 90vw;\n  margin-right: -5vw;\n  font-size: 15px;\n}\nbody.mtdeck-mobile .item-box .dropdown-menu .caret {\n  right: 13px;\n}\nbody.mtdeck-mobile .item-box .dropdown-menu [data-action] {\n  padding: 8px 20px;\n}\nbody.mtdeck-mobile .item-box .tweet {\n  padding-left: 60px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-header {\n  margin-bottom: 2px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-header .tweet-img {\n  margin-left: -60px;\n}\nbody.mtdeck-mobile .item-box .tweet .thread {\n  left: 38px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-body .other-replies {\n  margin-bottom: 2px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-footer {\n  margin-top: 12px;\n}\nbody.mtdeck-mobile .item-box .tweet .tweet-footer .tweet-actions {\n  display: flex;\n  justify-content: space-between;\n}\nbody.mtdeck-mobile .item-box .tweet .js-show-this-thread > p {\n  margin-top: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail.js-has-replies {\n  margin-left: 48px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail.js-has-replies .thread {\n  left: 38px;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .account-summary {\n  margin-bottom: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .account-summary .item-img {\n  margin-right: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .account-summary .tweet-text {\n  margin-bottom: 12px !important;\n}\nbody.mtdeck-mobile .item-box .tweet-detail .tweet-detail-actions {\n  padding-top: 4px;\n  padding-bottom: 4px;\n}\nbody.mtdeck-mobile .item-box .activity-header {\n  display: flex;\n  align-items: center;\n  margin-top: 0;\n  margin-bottom: 2px;\n}\nbody.mtdeck-mobile .item-box .activity-header .item-img {\n  margin-top: 0 !important;\n}\nbody.mtdeck-mobile .item-box .activity-header i {\n  font-size: 1.3em !important;\n  line-height: 1em;\n}\nbody.mtdeck-mobile .item-box .activity-header i.icon-user-filled {\n  font-size: 1em !important;\n}\nbody.mtdeck-mobile .item-box .activity-header .avatar {\n  width: 30px;\n  height: 30px;\n}\nbody.mtdeck-mobile .item-box .quoted-tweet, body.mtdeck-mobile .item-box .media-preview {\n  margin-top: 12px !important;\n  margin-bottom: 0 !important;\n}\nbody.mtdeck-mobile .item-box video {\n  width: 100%;\n  height: auto;\n}\n\nbody.mtdeck[data-btd-ready=true] .media-size-medium.btd-aspect-ratio-thumbnail,\nbody.mtdeck[data-btd-ready=true] .media-size-large.btd-aspect-ratio-thumbnail {\n  padding-top: calc(var(--btd-thumb-height) / var(--btd-thumb-width) * 100%);\n}\nbody.mtdeck[data-btd-ready=true] .js-int-scroller {\n  background-color: var(--btd-theme-background-lighter);\n}";
 
   insertStyle(styles);
   window.MTD = new Deck();
