@@ -106,27 +106,27 @@ export class AppContainerCustomizer {
 
 class TweetExpander {
   public addExpandTweetButton(): void {
-    const expanderPhrase = "(Expand tweet)";
     const $articles = document.querySelectorAll("article.js-stream-item");
     $articles.forEach(($article) => {
+      const expanderPhrase = "Expand tweet";
       const $tweetText = $article.querySelector(".js-tweet-text");
-      const statusUrl = $article.querySelector("span.tweet-action[href]")?.getAttribute("href");
-      if ($tweetText !== null && statusUrl !== null) {
-        // Expand Tweet を出す条件
-        // すでにExpand Tweet がなく、リンクを除くツイート本文が「…」で終わるが「……」では終わらない
-        const containsExpandTweet = $tweetText.lastElementChild?.textContent == expanderPhrase;
+      //const statusUrl = $article.querySelector("span.tweet-action[href]")?.getAttribute("href");
+      const statusUrl = $article.querySelector("a[href^='https://twitter.com/'][rel='url']")?.getAttribute("href");
+      if ($tweetText !== null && $tweetText?.lastElementChild?.textContent != expanderPhrase && statusUrl !== null) {
+        // Expand Tweet を出す条件：まだ「Expand Tweet」がなく、リンクを除くツイート本文が「…」で終わっており、ツイート本文に句読点がある
         const $lastTextNode = Array.from($tweetText.childNodes)
           .reverse()
           .find((node) => node.nodeType == Node.TEXT_NODE);
-        const lastText = $lastTextNode?.textContent ?? "";
-        if (!containsExpandTweet && lastText.endsWith("…") && !lastText.endsWith("……")) {
+        const lastText = $lastTextNode?.textContent?.trim() ?? "";
+        const tweetTextBody = $tweetText.textContent?.trim() ?? "";
+        if (lastText.endsWith("…") && !lastText.endsWith("……") && /[。、]/.test(tweetTextBody)) {
           const id = $article.getAttribute("data-tweet-id");
           // OTD が実装している expandTweet() を呼び出す
           const $expandTweet: HTMLAnchorElement = <HTMLAnchorElement>document.createElement("a");
           $expandTweet.setAttribute("class", "expand-tweet");
-          $expandTweet.setAttribute("href", "expandTweet(event, '${id}')");
+          $expandTweet.setAttribute("onclick", `expandTweet(event, '${id}')`);
           $expandTweet.textContent = expanderPhrase;
-          $tweetText.textContent += "\u{a0}";
+          $tweetText.appendChild(document.createTextNode("\u{a0}"));
           $tweetText.appendChild($expandTweet);
         }
       }

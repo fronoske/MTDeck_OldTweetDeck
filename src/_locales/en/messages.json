@@ -45,7 +45,7 @@
     "message": "Enable horizontal swipe to prev/next column"
   },
   "configOptionShowExpander": {
-    "message": "Show 'Expand tweet' button"
+    "message": "Ease 'Expand Tweet' appearance conditions"
   },
   "configOptionEnableSwipeDownToCloseMedia": {
     "message": "Enable swipe down to close media"

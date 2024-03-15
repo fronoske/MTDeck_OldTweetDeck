@@ -45,7 +45,7 @@
     "message": "横スワイプでカラムを移動する"
   },
   "configOptionShowExpander": {
-    "message": "長文ツイートの場合に「Expand tweet」を表示する"
+    "message": "「Expand tweet」の出現条件を緩和する"
   },
   "configOptionEnableSwipeDownToCloseMedia": {
     "message": "下スワイプで画像を閉じる"
