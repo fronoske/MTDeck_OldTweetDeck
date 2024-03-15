@@ -4,7 +4,8 @@ import { TouchManager } from "./touch";
 import { Config } from "./config";
 import { Menu } from "./menu";
 import { clickAll } from "./utils";
-import { AppContainerCustomizer, MediaPanelCustomizer } from "./customizer";
+import { AppContainerCustomizer } from "./appContainerCustomizer";
+import { MediaPanelCustomizer } from "./mediaPanelCustomizer";
 
 export class Deck {
   private config: Config = new Config();
