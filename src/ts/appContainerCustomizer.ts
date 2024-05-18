@@ -109,11 +109,12 @@ class TweetExpander {
     const $articles = document.querySelectorAll("article.js-stream-item");
     $articles.forEach(($article) => {
       const expanderPhrase = "Expand tweet";
+      const reExpanderPhrase = /Expand tweet|Loading\.\.\./;
       const $tweetText = $article.querySelector(".js-tweet-text");
       //const statusUrl = $article.querySelector("span.tweet-action[href]")?.getAttribute("href");
       const statusUrl = $article.querySelector("a[href^='https://twitter.com/'][rel='url']")?.getAttribute("href");
-      if ($tweetText !== null && $tweetText?.lastElementChild?.textContent != expanderPhrase && statusUrl !== null) {
-        // Expand Tweet を出す条件：まだ「Expand Tweet」がなく、リンクを除くツイート本文が「…」で終わっており、ツイート本文に句読点がある
+      if ($tweetText !== null && !$tweetText?.lastElementChild?.textContent?.match(reExpanderPhrase) && statusUrl !== null) {
+        // Expand Tweet を出す条件：まだ「Expand Tweet」「Loading...」がなく、リンクを除くツイート本文が「…」で終わっており、ツイート本文に句読点がある
         const $lastTextNode = Array.from($tweetText.childNodes)
           .reverse()
           .find((node) => node.nodeType == Node.TEXT_NODE);

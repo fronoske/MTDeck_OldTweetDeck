@@ -14,7 +14,8 @@
         "./MTDeckForOTD.user.js"
       ],
       "matches": [
-        "https://twitter.com/i/tweetdeck"
+        "https://twitter.com/i/tweetdeck",
+        "https://x.com/i/tweetdeck"
       ],
       "run_at": "document_end"
     }

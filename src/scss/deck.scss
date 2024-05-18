@@ -114,10 +114,10 @@ body.mtdeck {
   }
   /* 画像のサイズ */
   div.full-media-box > img.land-size-1 {position: absolute; top: auto; left: 0; width: 100%; height: auto;} /* ランドスケープ（横長）用 Level1。幅が画面幅、縦が auto */
-  div.full-media-box > img.land-size-2 {position: absolute; top: 0; left: auto; width: auto; height: 100%;} /* ランドスケープ（横長）用 Level2。幅が auto、縦が画面の高さ */
+  div.full-media-box > img.land-size-2 {position: absolute; top: 0; left: 0; width: auto; height: 100%;} /* ランドスケープ（横長）用 Level2。幅が auto、縦が画面の高さ */
   
   div.full-media-box > img.port-size-1 {position: absolute; top: 0; left: auto; width: auto; height: 100%;} /* ポートレート（縦長）用。幅がフルサイズ、縦が画面の高さ */
-  div.full-media-box > img.port-size-2 {position: absolute; top: auto; left: 0; width: 100%; height: auto;} /* ポートレート（縦長）用。幅がフルサイズ、縦が画面の高さ */
+  div.full-media-box > img.port-size-2 {position: absolute; top: 0; left: 0; width: 100%; height: auto;} /* ポートレート（縦長）用。幅がフルサイズ、縦が画面の高さ */
   
   div.full-media-box > img.land-size-3 {position: absolute; top: 0; left: 0; width: auto; height: auto;} /* フルサイズ */
   div.full-media-box > img.port-size-3 {position: absolute; top: 0; left: 0; width: auto; height: auto;} /* フルサイズ */

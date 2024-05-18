@@ -10,7 +10,7 @@ export const bundlePlugins = [typescript(), json(), sass()];
 export const userscriptPlugin = userscriptHeader({
   overwrite: {
     name: "MTDeck for OTD",
-    match: "https://twitter.com/i/tweetdeck",
+    match: ["https://twitter.com/i/tweetdeck","https://x.com/i/tweetdeck"],
   },
 });
 
