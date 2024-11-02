@@ -35,6 +35,9 @@
   "configOptionMobileFriendlyOnCol": {
     "message": "Enable mobile friendly styles on columns"
   },
+  "configOptionHideZombie": {
+    "message": "Hide Zombie's posts"
+  },
   "configOptionShowAbsoluteTime": {
     "message": "Show absolute time"
   },

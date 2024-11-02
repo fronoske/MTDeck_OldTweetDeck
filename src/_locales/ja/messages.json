@@ -35,6 +35,9 @@
   "configOptionMobileFriendlyOnCol": {
     "message": "カラム内にスマホ向けのスタイルを適用"
   },
+  "configOptionHideZombie": {
+    "message": "インプレゾンビのツイートを非表示にする"
+  },
   "configOptionShowAbsoluteTime": {
     "message": "絶対時刻を表示する"
   },

@@ -110,6 +110,9 @@ export class Deck {
     if (this.config.getBoolean("mtdDisablePinchZoom")) {
       document.body.classList.add("mtdeck-disalbe-pinch-zoom");
     }
+    if (this.config.getBoolean("mtdHideZombie")) {
+      document.body.classList.add("mtdeck-hide-zombie");
+    }
 
     new AppContainerCustomizer().doCustomize(this);
     new MediaPanelCustomizer().doCustomize();

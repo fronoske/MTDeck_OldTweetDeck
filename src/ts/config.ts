@@ -101,6 +101,12 @@ export class Config {
       type: "checkbox",
       default: "false",
     },
+    {
+      label: _("configOptionHideZombie"),
+      name: "mtdHideZombie",
+      type: "checkbox",
+      default: "false",
+    },
   ];
 
   public getString(key: string): string {

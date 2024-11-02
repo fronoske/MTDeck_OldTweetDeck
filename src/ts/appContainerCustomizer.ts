@@ -13,6 +13,7 @@ export class AppContainerCustomizer {
     const configEnableSwipeCol = this.bodyClassList.contains("mtdeck-enable-swipe-col");
     const configShowInitialInColumnTab = this.bodyClassList.contains("mtdeck-show-initial-in-col-tab");
     const configDisalbePinchZoom = this.bodyClassList.contains("mtdeck-disalbe-pinch-zoom");
+    const configHideZombie = this.bodyClassList.contains("mtdeck-hide-zombie");
 
     // Enable Swipe Navigation in Columns
     if (configEnableSwipeCol) {
@@ -21,6 +22,7 @@ export class AppContainerCustomizer {
 
     // Observe new post
     const onNewPostGenerated = () => {
+      if (configHideZombie) new ZombieKiller().hideZombie();
       if (configShowExpander) new TweetExpander().addExpandTweetButton();
       if (configShowAbsoluteTime) new AbsoluteTimeFormatter().updateTweetTimestamps();
     };
@@ -129,6 +131,24 @@ class TweetExpander {
           $expandTweet.textContent = expanderPhrase;
           $tweetText.appendChild(document.createTextNode("\u{a0}"));
           $tweetText.appendChild($expandTweet);
+        }
+      }
+    });
+  }
+}
+// アラビア文字、
+const RE_ZOMBIE = new RegExp("/^[\\p{Arabic}\\p{Devanagari}]+$/");
+
+class ZombieKiller {
+  public hideZombie(): void {
+    const $articles = document.querySelectorAll("article.js-stream-item");
+    $articles.forEach(($article) => {
+      const $tweetText = $article.querySelector(".js-tweet-text");
+      if ($tweetText !== null) {
+        const tweetTextBody = $tweetText.textContent?.trim() ?? "";
+        if (RE_ZOMBIE.test(tweetTextBody)) {
+          console.log("ゾンビ発見！");
+          $article.remove();
         }
       }
     });
